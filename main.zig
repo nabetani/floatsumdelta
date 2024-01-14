@@ -12,10 +12,10 @@ fn floatCast(comptime T: type, a: usize) T {
     return @as(T, @floatFromInt(a));
 }
 
-fn countMatch(comptime T: type, digits: i32) f64 {
+fn count(comptime T: type, name: []const u8, digits: i32) !void {
     const baseI = pow10(u32, digits);
     const deno = pow10(T, digits);
-    var matched: usize = 0;
+    var err: usize = 0;
     var tested: usize = 0;
     for (0..baseI) |ia| {
         const a: T = floatCast(T, ia) / deno;
@@ -24,12 +24,18 @@ fn countMatch(comptime T: type, digits: i32) f64 {
             const cExpected: T = floatCast(T, ia + ib) / deno;
             const cActual = a + b;
             tested += 1;
-            matched += if (cExpected == cActual) 1 else 0;
+            err += if (cExpected != cActual) 1 else 0;
         }
     }
-    return floatCast(f64, matched) * 100 / floatCast(f64, tested);
+    const percent = floatCast(f64, err) * 100 / floatCast(f64, tested);
+    try stdout.print("{s:4} {d}: {d:9}/{d:9} errors ({d:.3}%)\n", .{ name, digits, err, tested, percent });
 }
 pub fn main() !void {
-    const r = countMatch(f64, 2);
-    try stdout.print("{d}\n", .{r});
+    for ([_]i32{ 1, 2, 3, 4 }) |digits| {
+        try count(f16, "f16", digits);
+        try count(f32, "f32", digits);
+        try count(f64, "f64", digits);
+        try count(f80, "f80", digits);
+        try count(f128, "f128", digits);
+    }
 }
