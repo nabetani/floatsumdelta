@@ -1,25 +1,25 @@
 const std = @import("std");
 const stdout = std.io.getStdOut().writer();
 
-fn pow10(comptime T: type, digits: i32) T {
+fn pow10(comptime T: type, digits: anytype) T {
     if (digits <= 0) {
         return 1;
     }
     return pow10(T, digits - 1) * 10;
 }
 
-fn floatCast(comptime T: type, a: usize) T {
+fn floatCast(comptime T: type, a: anytype) T {
     return @as(T, @floatFromInt(a));
 }
 
-fn count(comptime T: type, name: []const u8, digits: i32) !void {
+fn count(comptime T: type, name: anytype, digits: i32) !void {
     const baseI = pow10(u32, digits);
-    const deno = pow10(T, digits);
+    const deno = floatCast(T, baseI);
     var err: usize = 0;
     var tested: usize = 0;
-    for (0..baseI) |ia| {
+    for (1..(baseI + 1)) |ia| {
         const a: T = floatCast(T, ia) / deno;
-        for (ia..baseI) |ib| {
+        for (ia..(baseI + 1)) |ib| {
             const b: T = floatCast(T, ib) / deno;
             const cExpected: T = floatCast(T, ia + ib) / deno;
             const cActual = a + b;
